@@ -10,6 +10,10 @@ async function findByEmail(email) {
     return User.findOne({email});
 }
 
+async function updateLocation(userId, location) {
+    return User.findByIdAndUpdate(userId, { location }, { new: true });
+}
+
 module.exports = {
     create,
     findByEmail
