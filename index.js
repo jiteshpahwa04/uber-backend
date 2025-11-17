@@ -4,6 +4,7 @@ const authRouter = require('./routes/auth.route');
 const { connectDB } = require('./utils/db');
 const { default: passengerRouter } = require('./routes/passenger.route');
 const driverRouter = require('./routes/driver.route');
+const socketIo = require('socket.io');
 require('dotenv').config();
 
 const app = express();
@@ -25,3 +26,7 @@ app.listen(process.env.PORT || 3000, async () => {
   await connectDB();
   console.log(`Server is running on port ${process.env.PORT || 3000}`);
 });
+
+const io = socketIo.listen(4000);
+const initSocket = require('./utils/socket');
+initSocket(io);

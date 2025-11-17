@@ -32,6 +32,22 @@ class locationService {
             return [];
         }
     }
+
+    async setDriverSocket(driverId, socketId) {
+        await redisClient.set(`driver:${driverId}`, socketId);
+    }
+
+    async getDriverSocket(driverId) {
+        return await redisClient.get(`driver:${driverId}`);
+    }
+
+    async deleteDriverSocket(driverId) {
+        await redisClient.del(`driver:${driverId}`);
+    }
+
+    async deleteBySocket(socketId) {
+        this.deleteDriverSocket(redisClient.get(socketId));
+    }
 }
 
 module.exports = new locationService();
