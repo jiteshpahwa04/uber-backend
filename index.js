@@ -1,32 +1,39 @@
-const express = require('express');
-const cors = require('cors');
-const authRouter = require('./routes/auth.route');
-const { connectDB } = require('./utils/db');
-const { default: passengerRouter } = require('./routes/passenger.route');
-const driverRouter = require('./routes/driver.route');
-const socketIo = require('socket.io');
 require('dotenv').config();
-
+const express = require('express');
+const http = require('http');
+const cors = require('cors');
+const { redisClient } = require('./utils/redisClient');
+const { connectDB } = require('./utils/db');
+const authRoutes = require('./routes/authRoutes');
+const passengerRoutes = require('./routes/passengerRoutes');
+const driverRoutes = require('./routes/driverRoutes');
 const app = express();
+const server = http.createServer(app);
+const PORT = process.env.PORT || 4000;
 
-app.use(express.json());
+// ---- middleware ----
 app.use(cors());
+app.use(express.json());
 
-app.use('/api/auth', authRouter);
-app.use('/api/passenger', passengerRouter);
-app.use('/api/driver', driverRouter);
+// ---- routes ----
+app.use('/api/auth', authRoutes);
+app.use('/api/passenger', passengerRoutes);
+app.use('/api/driver', driverRoutes);
+
+
+app.use((req, res) => res.status(404).json({ error: 'Not found' }));
 
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  const status = err.status || 500;
-  res.status(status).json({ error: 'Something went wrong!' });
-})
-
-app.listen(process.env.PORT || 3000, async () => {
-  await connectDB();
-  console.log(`Server is running on port ${process.env.PORT || 3000}`);
+  console.error(err);
+  const status = err.status || (err.code === 'AUTH_INVALID_CREDENTIALS' ? 401 : 500);
+  res.status(status).json({ error: err.message || 'Internal Server Error' });
 });
 
-const io = socketIo.listen(4000);
-const initSocket = require('./utils/socket');
-initSocket(io);
+async function start() {
+  await connectDB();
+  server.listen(PORT, () => {
+    console.log(`🚀 Server running at http://localhost:${PORT}`);
+  });
+}
+
+start();
